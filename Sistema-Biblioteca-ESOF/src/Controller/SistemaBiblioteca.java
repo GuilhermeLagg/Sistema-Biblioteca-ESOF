@@ -1,45 +1,45 @@
 package Controller;
 
-import java.util.List;
-import java.util.Scanner;
-
-import Model.GerenciarArquivos;
+import Model.Acervo;
+import Model.ArquivoLivroRepository;
 import Model.Livro;
+import Model.ValidadorLivro;
+import java.util.List;
 
 public class SistemaBiblioteca {
-    private static List<Livro> Acervo = GerenciarArquivos.lerLivros();
+    private Acervo acervo;
+    private ArquivoLivroRepository repositorio;
+    private String caminhoArquivo;
 
-    public static Scanner sc = new Scanner(System.in);
-
-    public static void cadastrarLivro(){
-        System.out.println(" ---- Cadastro de novo livro ---- ");
-        System.out.print("Título: ");
-        String titulo = sc.nextLine();
-        System.out.print("Autor: ");
-        String autor = sc.nextLine();
-        
-        if(titulo == null || autor == null){
-            System.out.println("ERRO AO CADASTRAR LIVRO - Informações inválidas \nOperação cancelada.\n");
-            return;
-        }
-
-        Acervo.add(new Livro(titulo, autor));
-        GerenciarArquivos.salvarDados(Acervo);
-        System.out.println("\nLivro cadastrado com sucesso!");
+    public SistemaBiblioteca(String caminhoArquivo) {
+        this.acervo = new Acervo();
+        this.repositorio = new ArquivoLivroRepository();
+        this.caminhoArquivo = caminhoArquivo;
     }
 
-    public static void carregarDados(){
-        if(Acervo.isEmpty()){
-            System.out.println("Acervo vazio, adicione um livro para visualizar");
-            return;
+    public void cadastrarLivro(String titulo, String autor) {
+        Livro livro = new Livro(titulo, autor);
+        ValidadorLivro validador = new ValidadorLivro();
+        
+        if (validador.validar(livro)) {
+            acervo.cadastrarLivro(livro);
+        } else {
+            System.out.println("ERRO AO CADASTRAR LIVRO - Informações inválidas.");
         }
+    }
 
-        System.out.println("Livros no acervo");
-        for(Livro l : Acervo){
-            System.out.println("----------------\n");
-            System.out.println(l);
-            System.out.println("\n----------------\n");
+    public List<Livro> listarAcervo() {
+        return acervo.listarLivros();
+    }
+
+    public void carregarDados() {
+        List<Livro> livrosCarregados = repositorio.carregarLivros(caminhoArquivo);
+        for (Livro l : livrosCarregados) {
+            acervo.cadastrarLivro(l);
         }
+    }
 
+    public void salvarDados() {
+        repositorio.salvarLivros(caminhoArquivo, acervo.listarLivros());
     }
 }
